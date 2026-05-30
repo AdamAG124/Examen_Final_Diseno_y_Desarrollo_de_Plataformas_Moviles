@@ -9,6 +9,6 @@ import com.panini.support.data.repository.TicketRepository
 object AppContainer {
 
     val eventBus: AppEventBus by lazy { AppEventBus() }
-    val ticketRepository: ITicketRepository by lazy { TicketRepository() }
+    val ticketRepository: ITicketRepository by lazy { TicketRepository(eventBus) }
     val authRepository: IAuthRepository by lazy { AuthRepository() }
 }

@@ -1,0 +1,219 @@
+openapi: 3.0.3
+info:
+  title: Panini Support API
+  description: >
+    Contrato de integración para la app móvil de gestión de tickets de soporte
+    interno (proveedores del álbum del Mundial FIFA 2026). El backend no está
+    implementado en esta PoC; este contrato define cómo la app se integraría
+    con el servicio real en una fase futura.
+  version: 1.0.0
+
+servers:
+  - url: https://api.panini-support.example.com/v1
+    description: Servidor de referencia (futuro)
+
+paths:
+  /auth/login:
+    post:
+      summary: Autenticación de usuario
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Autenticación exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Credenciales inválidas
+
+  /tickets:
+    get:
+      summary: Listar todos los tickets
+      operationId: getTickets
+      responses:
+        '200':
+          description: Lista de tickets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TicketResponse'
+    post:
+      summary: Crear un nuevo ticket
+      operationId: createTicket
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTicketRequest'
+      responses:
+        '201':
+          description: Ticket creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketResponse'
+
+  /tickets/{id}:
+    get:
+      summary: Obtener el detalle de un ticket
+      operationId: getTicket
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Detalle del ticket
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketResponse'
+        '404':
+          description: Ticket no encontrado
+
+  /tickets/{id}/status:
+    patch:
+      summary: Actualizar el estado de un ticket
+      operationId: updateStatus
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateStatusRequest'
+      responses:
+        '200':
+          description: Ticket actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketResponse'
+
+  /tickets/{id}/priority:
+    patch:
+      summary: Actualizar la prioridad de un ticket
+      operationId: updatePriority
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePriorityRequest'
+      responses:
+        '200':
+          description: Ticket actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketResponse'
+
+components:
+  schemas:
+    Priority:
+      type: string
+      enum: [CRITICAL, HIGH, MEDIUM, LOW]
+
+    TicketStatus:
+      type: string
+      enum: [OPEN, IN_PROGRESS, RESOLVED, CLOSED]
+
+    TicketCategory:
+      type: string
+      enum: [INVENTORY, DISTRIBUTION, LOGISTICS, SUPPLIER, PACKAGING, BILLING]
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          example: operador@panini.com
+        password:
+          type: string
+
+    LoginResponse:
+      type: object
+      required: [token, userName]
+      properties:
+        token:
+          type: string
+        userName:
+          type: string
+
+    CreateTicketRequest:
+      type: object
+      required: [title, description, priority, provider, category]
+      properties:
+        title:
+          type: string
+          example: Faltante de sobres en lote del proveedor MX-Norte
+        description:
+          type: string
+        priority:
+          $ref: '#/components/schemas/Priority'
+        provider:
+          type: string
+          example: Distribuidora MX-Norte
+        category:
+          $ref: '#/components/schemas/TicketCategory'
+
+    TicketResponse:
+      type: object
+      required: [id, title, description, priority, status, provider, category, createdAt]
+      properties:
+        id:
+          type: string
+          example: TCK-1001
+        title:
+          type: string
+        description:
+          type: string
+        priority:
+          $ref: '#/components/schemas/Priority'
+        status:
+          $ref: '#/components/schemas/TicketStatus'
+        provider:
+          type: string
+        category:
+          $ref: '#/components/schemas/TicketCategory'
+        createdAt:
+          type: string
+          example: "2026-05-28"
+
+    UpdateStatusRequest:
+      type: object
+      required: [status]
+      properties:
+        status:
+          $ref: '#/components/schemas/TicketStatus'
+
+    UpdatePriorityRequest:
+      type: object
+      required: [ priority ]
+      properties:
+        priority:
+          $ref: '#/components/schemas/Priority'
