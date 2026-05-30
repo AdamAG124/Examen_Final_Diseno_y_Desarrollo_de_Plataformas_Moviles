@@ -1,5 +1,7 @@
 package com.panini.support.data.repository
 
+import com.panini.support.core.event.AppEvent
+import com.panini.support.core.event.AppEventBus
 import com.panini.support.data.mock.MockTicketData
 import com.panini.support.domain.model.Priority
 import com.panini.support.domain.model.Ticket
@@ -11,7 +13,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
-class TicketRepository : ITicketRepository {
+class TicketRepository(
+    private val eventBus: AppEventBus
+) : ITicketRepository {
 
     private val _tickets = MutableStateFlow<List<Ticket>>(emptyList())
     override val tickets: StateFlow<List<Ticket>> = _tickets.asStateFlow()
@@ -46,6 +50,7 @@ class TicketRepository : ITicketRepository {
             createdAt = "2026-05-30"
         )
         _tickets.update { (it + nuevo).sortedForBoard() }
+        eventBus.emit(AppEvent.TicketCreated(nuevo.title))
     }
 
     override suspend fun updateStatus(id: String, status: TicketStatus) {
@@ -54,6 +59,7 @@ class TicketRepository : ITicketRepository {
             lista.map { if (it.id == id) it.copy(status = status) else it }
                 .sortedForBoard()
         }
+        eventBus.emit(AppEvent.StatusUpdated(status.label))
     }
 
     override suspend fun updatePriority(id: String, priority: Priority) {
@@ -62,6 +68,7 @@ class TicketRepository : ITicketRepository {
             lista.map { if (it.id == id) it.copy(priority = priority) else it }
                 .sortedForBoard()
         }
+        eventBus.emit(AppEvent.PriorityUpdated(priority.label))
     }
 
     private fun List<Ticket>.sortedForBoard(): List<Ticket> =
